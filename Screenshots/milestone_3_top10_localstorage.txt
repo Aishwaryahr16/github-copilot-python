@@ -1,0 +1,76 @@
+# Milestone 3 — Checking for Top 10 Score and Storing in Local Storage
+# Screenshot file to save: copilot_top10_localstorage.png
+
+## What this screenshot must show:
+- YOUR PROMPT to GitHub Copilot
+- COPILOT'S RESPONSE (leaderboard functions in game.js)
+
+---
+
+## Prompt to use in Copilot Chat:
+
+"In game.js, implement a Top 10 leaderboard stored in localStorage.
+
+Requirements:
+1. Key name: 'sudoku-top10'
+2. Each entry stores: { name, time (seconds), timeStr (MM:SS), difficulty, hints }
+3. List is always sorted fastest time first
+4. Maximum 10 entries kept
+5. Display in an HTML table with columns: Rank, Name, Time, Difficulty, Hints
+6. Top 3 get medal emojis (🥇 🥈 🥉) and gold/silver/bronze row colors
+7. Escape user-entered names to prevent XSS
+
+Write these functions:
+  - getLeaderboard()       — reads from localStorage
+  - addToLeaderboard(entry) — adds, sorts, slices to 10, saves
+  - renderLeaderboard()    — builds the HTML table"
+
+---
+
+## What Copilot should generate:
+
+```javascript
+const LEADERBOARD_KEY = 'sudoku-top10';
+
+function getLeaderboard() {
+  try {
+    return JSON.parse(localStorage.getItem(LEADERBOARD_KEY)) || [];
+  } catch { return []; }
+}
+
+function addToLeaderboard(entry) {
+  let lb = getLeaderboard();
+  lb.push(entry);
+  lb.sort((a, b) => a.time - b.time);
+  lb = lb.slice(0, 10);
+  localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(lb));
+  renderLeaderboard();
+}
+
+function renderLeaderboard() {
+  const lb = getLeaderboard();
+  if (!lb.length) {
+    lbBodyEl.innerHTML = '<tr><td colspan="5" class="no-scores">No scores yet!</td></tr>';
+    return;
+  }
+  lbBodyEl.innerHTML = lb.map((e, i) => {
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1;
+    const cls = i === 0 ? 'rank-gold' : i === 1 ? 'rank-silver' : i === 2 ? 'rank-bronze' : '';
+    return `<tr class="${cls}">
+      <td>${medal}</td>
+      <td>${safe(e.name)}</td>
+      <td>${e.timeStr}</td>
+      <td><span class="badge badge-${e.difficulty}">${e.difficulty}</span></td>
+      <td>${e.hints}</td>
+    </tr>`;
+  }).join('');
+}
+```
+
+---
+
+## Notes:
+- Accepted: overall structure with sort + slice + localStorage
+- Evaluated: Copilot FORGOT to add the safe() XSS escape on the name field
+  → REJECTED that part, added safe() function manually
+  → Code comment added: // XSS prevention — Copilot omitted this

@@ -1,0 +1,439 @@
+/* ============================================================
+   styles.css — Sudoku Game
+   Matching the actual Udacity repo file name: styles.css
+   Features: dark/light mode, responsive, alternating 3x3 boxes
+   ============================================================ */
+
+/* ── 1. CSS Custom Properties ──────────────────────────────── */
+:root {
+  --font-main:  'Inter', system-ui, sans-serif;
+  --font-mono:  'JetBrains Mono', 'Courier New', monospace;
+
+  /* Brand */
+  --primary:        #4f46e5;
+  --primary-light:  #eef2ff;
+  --primary-hover:  #4338ca;
+  --hint-color:     #0891b2;
+  --hint-bg:        #cffafe;
+  --error-color:    #dc2626;
+  --error-bg:       #fef2f2;
+  --success-color:  #16a34a;
+
+  /* Light mode */
+  --bg:             #f8fafc;
+  --bg-card:        #ffffff;
+  --text:           #1e293b;
+  --text-muted:     #64748b;
+  --border:         #e2e8f0;
+  --border-bold:    #334155;
+
+  /* Board cells - Light */
+  --cell-even:      #eef2ff;    /* Light indigo for even boxes */
+  --cell-odd:       #ffffff;    /* White for odd boxes */
+  --cell-locked-bg: #f1f5f9;
+  --cell-locked-fg: #1e293b;
+  --cell-user-fg:   #4f46e5;
+  --cell-selected:  #c7d2fe;
+  --cell-same:      #e0e7ff;
+  --cell-conflict:  #fee2e2;
+
+  /* Shadows & Radius */
+  --shadow:    0 4px 16px rgba(0,0,0,.08);
+  --radius:    12px;
+  --radius-sm: 8px;
+}
+
+/* Dark mode */
+body.dark {
+  --bg:             #0f172a;
+  --bg-card:        #1e293b;
+  --text:           #e2e8f0;
+  --text-muted:     #94a3b8;
+  --border:         #334155;
+  --border-bold:    #94a3b8;
+
+  --cell-even:      #243048;
+  --cell-odd:       #1a2540;
+  --cell-locked-bg: #1e2d40;
+  --cell-locked-fg: #cbd5e1;
+  --cell-user-fg:   #818cf8;
+  --cell-selected:  #2e3a5e;
+  --cell-same:      #1e255a;
+  --cell-conflict:  #450a0a;
+  --hint-bg:        #083344;
+
+  --shadow:    0 4px 24px rgba(0,0,0,.3);
+  --primary-light: #1e1b4b;
+}
+
+/* ── 2. Reset ───────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-main);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  transition: background .3s, color .3s;
+  line-height: 1.6;
+}
+
+/* ── 3. Loading Overlay ────────────────────────────────────── */
+#loading-overlay {
+  position: fixed; inset: 0;
+  background: rgba(15,23,42,.75);
+  backdrop-filter: blur(6px);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 16px; z-index: 9999;
+  transition: opacity .3s;
+}
+#loading-overlay.hidden { opacity: 0; pointer-events: none; }
+
+.spinner {
+  width: 48px; height: 48px;
+  border: 4px solid rgba(99,102,241,.2);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+#loading-overlay p { color: #e2e8f0; font-weight: 500; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── 4. Header ─────────────────────────────────────────────── */
+header {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  position: sticky; top: 0; z-index: 100;
+  transition: background .3s;
+}
+header > * { /* inner flex */ }
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; height: 60px;
+}
+
+h1 {
+  font-size: 1.6rem; font-weight: 800;
+  letter-spacing: -.03em;
+  background: linear-gradient(135deg, var(--primary), #a78bfa);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+#dark-mode-btn {
+  background: none; border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  width: 40px; height: 40px; font-size: 1.1rem;
+  cursor: pointer; color: var(--text);
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+}
+#dark-mode-btn:hover { background: var(--primary-light); border-color: var(--primary); }
+
+/* ── 5. Main Layout ────────────────────────────────────────── */
+main {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 20px;
+}
+
+/* ── 6. Top Controls ───────────────────────────────────────── */
+.top-controls {
+  width: 100%;
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap;
+  gap: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  box-shadow: var(--shadow);
+}
+
+.control-left, .control-right {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+
+label[for="difficulty"] {
+  font-size: .75rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .06em;
+  color: var(--text-muted);
+}
+
+select#difficulty {
+  padding: 7px 28px 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-main);
+  font-size: .875rem; font-weight: 500;
+  cursor: pointer; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  transition: all .2s;
+}
+select#difficulty:focus { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+/* Timer */
+.timer-label { font-size: .75rem; color: var(--text-muted); font-weight: 600; }
+#timer {
+  font-family: var(--font-mono);
+  font-size: 1.3rem; font-weight: 700;
+  color: var(--primary); min-width: 58px;
+}
+
+/* Buttons */
+button {
+  cursor: pointer;
+  font-family: var(--font-main);
+  font-weight: 600; border: none;
+  border-radius: var(--radius-sm);
+  transition: all .2s;
+}
+button:active { transform: scale(.97); }
+
+#new-game {
+  background: linear-gradient(135deg, var(--primary), #818cf8);
+  color: #fff; padding: 8px 16px; font-size: .875rem;
+  box-shadow: 0 3px 10px rgba(79,70,229,.3);
+}
+#new-game:hover {
+  background: linear-gradient(135deg, var(--primary-hover), #6366f1);
+  box-shadow: 0 5px 14px rgba(79,70,229,.4);
+  transform: translateY(-1px);
+}
+
+#check-btn {
+  background: var(--primary-light);
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  padding: 8px 14px; font-size: .875rem;
+}
+#check-btn:hover { background: var(--primary); color: #fff; transform: translateY(-1px); }
+
+#hint-btn {
+  background: linear-gradient(135deg, #06b6d4, #0ea5e9);
+  color: #fff; padding: 8px 14px; font-size: .875rem;
+  box-shadow: 0 3px 10px rgba(6,182,212,.3);
+}
+#hint-btn:hover { background: linear-gradient(135deg, #0891b2, #0284c7); transform: translateY(-1px); }
+
+/* ── 7. Sudoku Board ───────────────────────────────────────── */
+#sudoku-board {
+  display: grid;
+  grid-template-columns: repeat(9, 52px);
+  grid-template-rows: repeat(9, 52px);
+  border: 3px solid var(--border-bold);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+/* Individual Cell */
+.cell {
+  width: 52px; height: 52px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 1.15rem; font-weight: 600;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer; user-select: none;
+  transition: background .12s, transform .1s;
+}
+
+/* Remove outer borders */
+.cell:nth-child(9n)        { border-right: none; }
+.cell:nth-last-child(-n+9) { border-bottom: none; }
+
+/* Alternating 3x3 box colors */
+.cell.box-even { background: var(--cell-even); }
+.cell.box-odd  { background: var(--cell-odd); }
+
+/* Bold box dividers */
+.cell.box-top  { border-top:  3px solid var(--border-bold); }
+.cell.box-left { border-left: 3px solid var(--border-bold); }
+
+/* Cell states */
+.cell.locked  { background: var(--cell-locked-bg); color: var(--cell-locked-fg); font-weight: 700; cursor: default; }
+.cell.hint    { background: var(--hint-bg) !important; color: var(--hint-color); font-weight: 700; cursor: default; box-shadow: inset 0 0 0 2px var(--hint-color); }
+.cell.user    { color: var(--cell-user-fg); }
+.cell.conflict{ background: var(--cell-conflict) !important; color: var(--error-color); box-shadow: inset 0 0 0 2px var(--error-color); animation: shake .3s ease; }
+.cell.selected{ background: var(--cell-selected) !important; box-shadow: inset 0 0 0 2.5px var(--primary); z-index: 1; }
+.cell.same-num{ background: var(--cell-same) !important; }
+.cell:not(.locked):not(.hint):hover { background: var(--cell-selected) !important; transform: scale(.93); }
+
+@keyframes shake {
+  0%  { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+  100%{ transform: translateX(0); }
+}
+
+/* ── 8. Number Pad (mobile) ────────────────────────────────── */
+#number-pad {
+  display: none; /* shown on mobile via media query */
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px; width: 100%;
+}
+
+.num-key {
+  padding: 14px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg); color: var(--text);
+  font-family: var(--font-mono); font-size: 1.1rem; font-weight: 600;
+}
+.num-key:hover { background: var(--primary); color: #fff; border-color: var(--primary); transform: translateY(-2px); }
+.num-key-del  { background: var(--error-bg); color: var(--error-color); border-color: var(--error-color); }
+.num-key-del:hover { background: var(--error-color); color: #fff; }
+
+/* ── 9. Game Stats ─────────────────────────────────────────── */
+#game-stats {
+  font-size: .875rem; color: var(--text-muted);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 6px 18px;
+}
+#game-stats strong { color: var(--primary); font-family: var(--font-mono); }
+
+/* ── 10. Leaderboard ───────────────────────────────────────── */
+#leaderboard {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+  box-shadow: var(--shadow);
+}
+
+#leaderboard h2 {
+  font-size: 1.1rem; font-weight: 700; margin-bottom: 16px;
+  color: var(--text);
+}
+
+#leaderboard table {
+  width: 100%; border-collapse: collapse; font-size: .875rem;
+}
+#leaderboard th {
+  text-align: left; padding: 8px 12px;
+  font-size: .7rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .06em;
+  color: var(--text-muted); border-bottom: 2px solid var(--border);
+}
+#leaderboard td {
+  padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text);
+}
+#leaderboard tr:last-child td { border-bottom: none; }
+#leaderboard tbody tr:hover td { background: var(--primary-light); }
+
+.rank-gold   td { background: rgba(234,179,8,.08); }
+.rank-silver td { background: rgba(148,163,184,.08); }
+.rank-bronze td { background: rgba(180,83,9,.06); }
+
+.no-scores { text-align: center; color: var(--text-muted); font-style: italic; padding: 20px 0; }
+
+/* Difficulty badges */
+.badge { padding: 2px 10px; border-radius: 100px; font-size: .72rem; font-weight: 600; text-transform: capitalize; }
+.badge-easy   { background: #dcfce7; color: #16a34a; }
+.badge-medium { background: #fef3c7; color: #d97706; }
+.badge-hard   { background: #fee2e2; color: #dc2626; }
+
+body.dark .badge-easy   { background: #14532d; color: #86efac; }
+body.dark .badge-medium { background: #451a03; color: #fcd34d; }
+body.dark .badge-hard   { background: #450a0a; color: #fca5a5; }
+
+/* ── 11. Congratulations Modal ─────────────────────────────── */
+#congrats-modal {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.65);
+  backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; padding: 24px;
+  transition: opacity .3s;
+}
+#congrats-modal.hidden { opacity: 0; pointer-events: none; }
+
+.modal-box {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  box-shadow: 0 20px 50px rgba(0,0,0,.3);
+  border: 1px solid var(--border);
+  padding: 36px 32px;
+  max-width: 400px; width: 100%;
+  text-align: center;
+  animation: pop-in .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes pop-in { from { transform: scale(.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.modal-emoji { font-size: 3rem; margin-bottom: 8px; animation: bounce .6s ease; }
+@keyframes bounce { 0% { transform: scale(0); } 60% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+.modal-box h2 { font-size: 1.6rem; font-weight: 800; margin-bottom: 6px; }
+.modal-box > p { color: var(--text-muted); margin-bottom: 20px; }
+
+.modal-stats {
+  display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 22px;
+}
+.modal-stats div {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px; display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 80px;
+}
+.modal-stats span { font-size: .65rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); }
+.modal-stats strong { font-family: var(--font-mono); font-size: 1.1rem; color: var(--primary); }
+
+.modal-box label { display: block; font-size: .8rem; color: var(--text-muted); text-align: left; margin-bottom: 6px; }
+
+#player-name {
+  width: 100%; padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg); color: var(--text);
+  font-family: var(--font-main); font-size: 1rem;
+  margin-bottom: 16px;
+  transition: border-color .2s;
+}
+#player-name:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,.15); }
+
+.modal-buttons { display: flex; gap: 10px; justify-content: center; }
+
+#save-btn {
+  background: linear-gradient(135deg, var(--primary), #818cf8);
+  color: #fff; padding: 10px 22px;
+  box-shadow: 0 4px 12px rgba(79,70,229,.35);
+}
+#save-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(79,70,229,.45); }
+
+#play-again-btn {
+  background: var(--primary-light); color: var(--primary);
+  border: 1px solid var(--primary); padding: 10px 22px;
+}
+#play-again-btn:hover { background: var(--primary); color: #fff; transform: translateY(-1px); }
+
+/* ── 12. Responsive ────────────────────────────────────────── */
+@media (max-width: 600px) {
+  #sudoku-board {
+    grid-template-columns: repeat(9, 1fr);
+    grid-template-rows: repeat(9, 1fr);
+    width: calc(100vw - 48px);
+    height: calc(100vw - 48px);
+  }
+  .cell { width: 100%; height: 100%; font-size: .95rem; }
+
+  #number-pad { display: grid; }
+
+  .top-controls { flex-direction: column; align-items: flex-start; }
+  .control-right { width: 100%; justify-content: space-between; }
+}
+
+@media (max-width: 380px) {
+  .cell { font-size: .8rem; }
+  h1 { font-size: 1.3rem; }
+}

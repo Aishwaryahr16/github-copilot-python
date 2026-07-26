@@ -1,0 +1,74 @@
+# Milestone 4 — Styling the Grid So the 3×3 Squares Have Different Colors
+# Screenshot file to save: copilot_3x3_colors.png
+
+## What this screenshot must show:
+- YOUR PROMPT to GitHub Copilot
+- COPILOT'S RESPONSE (CSS + JS box coloring logic)
+
+---
+
+## Prompt to use in Copilot Chat:
+
+"In game.js and styles.css, make the 9 Sudoku 3×3 boxes alternate between
+two different background colors so they are easy to distinguish.
+
+In renderBoard() (game.js):
+- Calculate box index: Math.floor(row/3)*3 + Math.floor(col/3)
+  (gives 0-8 for the nine boxes)
+- Add class 'box-even' if boxIndex % 2 === 0
+- Add class 'box-odd'  if boxIndex % 2 === 1
+
+In styles.css:
+- Define CSS variables --cell-even and --cell-odd in :root
+- Light mode: --cell-even: #eef2ff  (soft indigo), --cell-odd: #ffffff (white)
+- Dark  mode: --cell-even: #243048, --cell-odd: #1a2540
+- Also add bold top/left borders at 3×3 boundaries:
+  if row % 3 === 0 and row !== 0 → add class 'box-top'
+  if col % 3 === 0 and col !== 0 → add class 'box-left'"
+
+---
+
+## What Copilot should generate:
+
+In renderBoard() (game.js):
+```javascript
+const boxIdx = Math.floor(r / 3) * 3 + Math.floor(c / 3);
+cell.classList.add(boxIdx % 2 === 0 ? 'box-even' : 'box-odd');
+
+if (r % 3 === 0 && r !== 0) cell.classList.add('box-top');
+if (c % 3 === 0 && c !== 0) cell.classList.add('box-left');
+```
+
+In styles.css:
+```css
+:root {
+  --cell-even: #eef2ff;
+  --cell-odd:  #ffffff;
+}
+body.dark {
+  --cell-even: #243048;
+  --cell-odd:  #1a2540;
+}
+
+.cell.box-even { background: var(--cell-even); }
+.cell.box-odd  { background: var(--cell-odd); }
+.cell.box-top  { border-top:  3px solid var(--border-bold); }
+.cell.box-left { border-left: 3px solid var(--border-bold); }
+```
+
+---
+
+## Visual Result:
+Boxes 0, 2, 4, 6, 8 (top-left, top-right, center, bottom-left, bottom-right) = --cell-even
+Boxes 1, 3, 5, 7 (top-mid, mid-left, mid-right, bottom-mid) = --cell-odd
+
+This creates a checkerboard-like pattern for the 3×3 boxes.
+
+---
+
+## Notes:
+- Accepted: the box index calculation and class naming
+- Evaluated: Copilot initially used a lookup table approach instead of
+  the modulo formula → more complex, harder to maintain
+  → REJECTED lookup table version
+  → Accepted the cleaner boxIdx % 2 approach

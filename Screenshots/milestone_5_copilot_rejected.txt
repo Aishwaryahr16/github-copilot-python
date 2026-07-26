@@ -1,0 +1,92 @@
+# Milestone 5 — Evaluating or Rejecting a Copilot Suggestion
+# Screenshot file to save: copilot_suggestion_rejected.png
+
+## What this screenshot must show:
+- YOUR PROMPT to GitHub Copilot
+- COPILOT'S RESPONSE
+- YOUR DECISION: what you accepted, what you rejected, and WHY
+
+---
+
+## Example 1 — REJECTED (Board State in Flask Session)
+
+### Prompt:
+"How should I store the current Sudoku puzzle and solution between
+the /new and /hint routes in Flask?"
+
+### Copilot's Response (REJECTED):
+Copilot suggested:
+```python
+from flask import session
+app.secret_key = 'abc123'
+
+@app.route('/new')
+def new_game():
+    puzzle, solution = generate_puzzle(35)
+    session['puzzle']   = puzzle
+    session['solution'] = solution
+    return jsonify({'puzzle': puzzle})
+```
+
+### Why REJECTED:
+- Flask sessions use signed cookies (limited to ~4KB)
+- A 9x9 board = 81 cells, two boards = 162 values — borderline
+- More importantly: the design goal is a STATELESS backend
+  (game state should live on the client, not the server)
+- Using sessions would break if multiple browser tabs play at once
+
+### What was done instead:
+```python
+# In-memory dict for single-user demo (matches original repo structure)
+CURRENT = {'puzzle': None, 'solution': None}
+
+# Solution returned to client with /new response
+# Client sends solution back with /hint request
+return jsonify({'puzzle': puzzle, 'solution': solution})
+```
+
+---
+
+## Example 2 — REJECTED (innerHTML without escaping)
+
+### Prompt:
+"Render leaderboard entries in the table body using innerHTML"
+
+### Copilot's Response (PARTIALLY REJECTED):
+```javascript
+lbBodyEl.innerHTML = lb.map(e => `<tr><td>${e.name}</td></tr>`).join('');
+```
+
+### Why REJECTED:
+- `e.name` is user-entered text from the input field
+- If a user types `<script>alert('xss')</script>` as their name,
+  innerHTML would execute that script — a Cross-Site Scripting (XSS) vulnerability
+- Copilot did NOT add any HTML escaping
+
+### What was added:
+```javascript
+// XSS prevention — Copilot omitted this, added manually
+function safe(s) {
+  const d = document.createElement('div');
+  d.appendChild(document.createTextNode(s));
+  return d.innerHTML;
+}
+// Usage: ${safe(e.name)} instead of ${e.name}
+```
+
+---
+
+## Summary of All Evaluation Decisions
+
+| Milestone | Accepted? | Reason |
+|---|---|---|
+| Test file structure | ✅ Accepted | Clean class organization |
+| Test for validate_board() | ❌ Rejected | Function doesn't exist in codebase |
+| count_solutions without early stop | ❌ Rejected | Too slow — no limit check |
+| count_solutions with limit=2 | ✅ Accepted | Efficient and correct |
+| Session-based puzzle storage | ❌ Rejected | Violates stateless architecture |
+| Client-side state storage | ✅ Accepted | Correct architecture |
+| innerHTML without XSS escape | ❌ Rejected | Security vulnerability |
+| innerHTML with safe() function | ✅ Accepted | Secure |
+| Lookup table for box colors | ❌ Rejected | Overly complex |
+| boxIdx % 2 formula | ✅ Accepted | Clean and readable |

@@ -1,0 +1,54 @@
+{
+  "description": "Favorite GitHub Copilot prompt templates for the Sudoku refactoring project",
+  "prompts": [
+    {
+      "id": "testing_framework",
+      "milestone": "Setting up testing framework",
+      "label": "copilot_testing_framework.png",
+      "prompt": "Generate a Python unittest test file for sudoku_logic.py that tests is_safe(), generate_puzzle(), count_solutions(), and get_conflicts(). Include edge cases and ensure tests are deterministic using copy.deepcopy().",
+      "notes": "Used in Ask mode. Copilot generated a solid structure but included a test for an undefined function — rejected that test case."
+    },
+    {
+      "id": "unique_solution",
+      "milestone": "Ensuring the Sudoku board has only one unique solution",
+      "label": "copilot_unique_solution.png",
+      "prompt": "Write a Python function called count_solutions(board, limit=2) that uses backtracking to count the number of valid solutions for a Sudoku board, stopping early once the count reaches the limit. Use this to ensure generate_puzzle() only returns puzzles with exactly one solution.",
+      "notes": "Used in Edit mode. Accepted Copilot's backtracking approach after verifying it stops at limit=2. Rejected an initial version that didn't stop early."
+    },
+    {
+      "id": "top10_localstorage",
+      "milestone": "Checking for top 10 score and storing the top 10 in local storage",
+      "label": "copilot_top10_localstorage.png",
+      "prompt": "Write a JavaScript function addToLeaderboard(entry) that retrieves a JSON array from localStorage key 'sudoku-top10', pushes the new entry, sorts by time ascending, slices to 10 items, and saves back. Then write renderLeaderboard() to display the table with rank medals.",
+      "notes": "Used in Chat mode. Accepted. Added XSS sanitization (safe() function) after reviewing — Copilot's initial version did not escape user names."
+    },
+    {
+      "id": "box_colors",
+      "milestone": "Styling the grid so the 3x3 squares have different colors",
+      "label": "copilot_box_colors.png",
+      "prompt": "In the renderBoard() function, calculate the 3x3 box index as Math.floor(row/3)*3 + Math.floor(col/3) and add CSS class 'box-even' or 'box-odd' based on whether the index is even or odd. Define --cell-even and --cell-odd CSS variables for light and dark mode.",
+      "notes": "Used in Edit mode. Accepted. Verified visually that alternation is correct — boxes at positions 0,2,4,6,8 are even-colored and 1,3,5,7 are odd-colored."
+    },
+    {
+      "id": "hint_feature",
+      "milestone": "Adding hint feature with unique colors",
+      "label": "copilot_hint_feature.png",
+      "prompt": "Write a Flask POST route /hint that picks a random empty cell from the board, looks up its value in the stored solution, and returns {row, col, value}. On the client, apply class 'hint' to this cell, lock it so it can't be changed, and use a distinct cyan color (--hint-color: #0891b2).",
+      "notes": "Used in Agent mode across app.py and game.js. Accepted the cyan color suggestion. Rejected an initial version that allowed re-hinting the same cell."
+    },
+    {
+      "id": "dark_mode",
+      "milestone": "Dark mode toggle",
+      "label": "copilot_dark_mode.png",
+      "prompt": "Implement a dark/light mode toggle using a <button id='dark-mode-btn'>. On click, toggle the class 'dark' on document.body and save the preference to localStorage key 'sudoku-theme'. In CSS, use :root variables for light mode and body.dark overrides for dark mode.",
+      "notes": "Used in Edit mode. Accepted. Verified both modes have sufficient contrast for text and button visibility."
+    },
+    {
+      "id": "conflict_detection",
+      "milestone": "Real-time conflict highlighting",
+      "label": "copilot_conflict_detection.png",
+      "prompt": "In game.js, write a detectConflicts(r, c, num) function that checks if placing 'num' at (r,c) conflicts with any value in the same row, column, or 3x3 box. Add/remove a 'conflict' CSS class with a red highlight and shake animation for immediate visual feedback.",
+      "notes": "Used in Chat mode. Accepted the approach. Rejected a version that cleared ALL conflict highlights on every keypress (too disruptive)."
+    }
+  ]
+}

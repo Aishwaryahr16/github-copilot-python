@@ -1,0 +1,45 @@
+# Milestone 1 — Setting Up Your Testing Framework
+# Screenshot file to save: copilot_testing_framework.png
+
+## What this screenshot must show:
+- YOUR PROMPT to GitHub Copilot
+- COPILOT'S RESPONSE (generated test code)
+
+---
+
+## Prompt to use in Copilot Chat:
+
+"I have a file called sudoku_logic.py with these functions:
+  - is_safe(board, row, col, num)
+  - generate_puzzle(clues)
+  - count_solutions(board, limit)
+  - get_conflicts(board)
+
+Generate a Python unittest test file called tests/test_sudoku.py that:
+1. Tests all four functions above
+2. Covers happy path and edge cases
+3. Uses copy.deepcopy() so tests are independent
+4. Follows PEP 8 and includes docstrings"
+
+---
+
+## What Copilot should generate:
+A complete tests/test_sudoku.py with:
+  - import unittest, copy, sys
+  - sys.path.insert to find sudoku_logic
+  - class TestIsSafe(unittest.TestCase) with 4+ test methods
+  - class TestGeneratePuzzle(unittest.TestCase) with 4+ test methods
+  - class TestGetConflicts(unittest.TestCase) with 3+ test methods
+  - if __name__ == '__main__': unittest.main(verbosity=2)
+
+---
+
+## How to run the tests (put in README):
+  python -m pytest tests/ -v
+
+---
+
+## Notes:
+- Accepted: overall structure and test class organization
+- Rejected: Copilot included a test for validate_board() which doesn't exist
+  → Deleted that test manually and kept only existing functions
